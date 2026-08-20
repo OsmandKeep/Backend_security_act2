@@ -1,57 +1,65 @@
 # Security Exercise - Backend API (Part 1)
 
-API construida con **Python** y **FastAPI** para demostrar el anti-patrón de seguridad basado en API Keys estáticas enviadas en encabezados HTTP.
+API built with **Python** and **FastAPI** to demonstrate the security anti-pattern of static API key authentication passed via HTTP headers.
 
-## 🚀 Requisitos previos
+## 🚀 Prerequisites
 
 - Python 3.10+
-- Entorno virtual activado
+- Activated virtual environment
 
-## 📦 Instalación de dependencias
+## 📦 Dependency Installation
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## ⚙️ Configuración
+## ⚙️ Configuration
 
-Por defecto, la clave API estática esperada es `mi-clave-secreta-123`.
-Puedes cambiarla configurando la variable de entorno `API_KEY`:
+By default, the expected static API key is `my-secret-key-123`.
+You can change it by setting the `API_KEY` environment variable:
 
 ```bash
-# En Windows (PowerShell)
-$env:API_KEY="tu_clave_personalizada"
+# On Windows (PowerShell)
+$env:API_KEY="your_custom_key"
 
-# En Linux/Mac
-export API_KEY="tu_clave_personalizada"
+# On Linux/Mac
+export API_KEY="your_custom_key"
 ```
 
-## ▶️ Ejecución del Servidor Local
+## ▶️ Running the Local Server
 
-Ejecuta el servidor en modo desarrollo con recarga automática:
+Run the development server with auto-reload:
 
 ```bash
 uvicorn main:app --reload --port 8000
 ```
 
-El servidor estará disponible en `http://localhost:8000`.
-Documentación interactiva disponible en `http://localhost:8000/docs`.
+The server will be available at `http://localhost:8000`.
+Interactive documentation is available at `http://localhost:8000/docs`.
 
 ---
 
 ## 📌 Endpoints
 
-| Método | Endpoint | Requiere API Key | Header requerido | Respuesta esperada |
+| Method | Endpoint | Requires API Key | Required Header | Expected Response |
 |---|---|---|---|---|
-| `GET` | `/health` | ❌ No | Ninguno | `{"status": "ok"}` |
-| `GET` | `/api/data` | ✅ Sí | `x-api-key: mi-clave-secreta-123` | JSON con datos protegidos |
-| `POST` | `/api/data` | ✅ Sí | `x-api-key: mi-clave-secreta-123` | `{"message": "POST received"}` |
+| `GET` | `/health` | ❌ No | None | `{"status": "ok"}` |
+| `GET` | `/api/data` | ✅ Yes | `x-api-key: my-secret-key-123` | JSON with protected data |
+| `POST` | `/api/data` | ✅ Yes | `x-api-key: my-secret-key-123` | `{"message": "POST received"}` |
 
 ---
 
-## 🧪 Pruebas de los Endpoints
+## 🧪 Testing the Endpoints
 
-### 1. Health Check (GET `/health`)
+### Automated Test Suite
+Run the test script directly:
+```bash
+python test_api.py
+```
+
+### Manual Testing
+
+#### 1. Health Check (GET `/health`)
 **PowerShell:**
 ```powershell
 Invoke-RestMethod -Uri "http://localhost:8000/health" -Method Get
@@ -63,17 +71,17 @@ curl -X GET "http://localhost:8000/health"
 
 ---
 
-### 2. Protected GET (GET `/api/data`)
+#### 2. Protected GET (GET `/api/data`)
 
-**Con API Key válida:**
+**With valid API Key:**
 ```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/data" -Method Get -Headers @{"x-api-key"="mi-clave-secreta-123"}
+Invoke-RestMethod -Uri "http://localhost:8000/api/data" -Method Get -Headers @{"x-api-key"="my-secret-key-123"}
 ```
 ```bash
-curl -X GET "http://localhost:8000/api/data" -H "x-api-key: mi-clave-secreta-123"
+curl -X GET "http://localhost:8000/api/data" -H "x-api-key: my-secret-key-123"
 ```
 
-**Sin API Key o clave inválida (Retorna 401 Unauthorized):**
+**Without API Key or with invalid key (Returns 401 Unauthorized):**
 ```powershell
 Invoke-RestMethod -Uri "http://localhost:8000/api/data" -Method Get
 ```
@@ -83,22 +91,23 @@ curl -X GET "http://localhost:8000/api/data"
 
 ---
 
-### 3. Protected POST (POST `/api/data`)
+#### 3. Protected POST (POST `/api/data`)
 
-**Con API Key válida:**
+**With valid API Key:**
 ```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/data" -Method Post -Headers @{"x-api-key"="mi-clave-secreta-123"}
+Invoke-RestMethod -Uri "http://localhost:8000/api/data" -Method Post -Headers @{"x-api-key"="my-secret-key-123"}
 ```
 ```bash
-curl -X POST "http://localhost:8000/api/data" -H "x-api-key: mi-clave-secreta-123"
+curl -X POST "http://localhost:8000/api/data" -H "x-api-key: my-secret-key-123"
 ```
 
 ---
 
-## 🛡️ Anti-patrón de Seguridad
+## 🛡️ Security Anti-Pattern
 
-Este ejercicio reproduce el siguiente flujo de validación:
-1. El cliente envía `x-api-key: SECRET` en la cabecera.
-2. El servidor compara directamente el valor contra una clave fija.
-3. Si no existe o no coincide -> `401 Unauthorized`.
-4. Si coincide -> Retorna los datos protegidos.
+This exercise demonstrates the following validation flow:
+1. The client sends `x-api-key: SECRET` in the header.
+2. The server directly compares the value against a hardcoded/static key.
+3. If missing or mismatched -> `401 Unauthorized`.
+4. If matched -> Returns the protected data.
+
