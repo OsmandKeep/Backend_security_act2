@@ -19,7 +19,7 @@ app.add_middleware(
 )
 
 # Configured static API Key (can be overridden via API_KEY environment variable)
-STATIC_API_KEY = os.getenv("API_KEY", "my-secret-key-123")
+STATIC_API_KEY = os.getenv("API_KEY", "my-secret-key")
 
 
 def require_api_key(x_api_key: Optional[str] = Header(None, alias="x-api-key")):

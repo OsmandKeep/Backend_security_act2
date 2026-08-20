@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 ## ⚙️ Configuration
 
-By default, the expected static API key is `my-secret-key-123`.
+By default, the expected static API key is `my-secret-key`.
 You can change it by setting the `API_KEY` environment variable:
 
 ```bash
@@ -44,8 +44,8 @@ Interactive documentation is available at `http://localhost:8000/docs`.
 | Method | Endpoint | Requires API Key | Required Header | Expected Response |
 |---|---|---|---|---|
 | `GET` | `/health` | ❌ No | None | `{"status": "ok"}` |
-| `GET` | `/api/data` | ✅ Yes | `x-api-key: my-secret-key-123` | JSON with protected data |
-| `POST` | `/api/data` | ✅ Yes | `x-api-key: my-secret-key-123` | `{"message": "POST received"}` |
+| `GET` | `/api/data` | ✅ Yes | `x-api-key: my-secret-key` | JSON with protected data |
+| `POST` | `/api/data` | ✅ Yes | `x-api-key: my-secret-key` | `{"message": "POST received"}` |
 
 ---
 
@@ -75,10 +75,10 @@ curl -X GET "http://localhost:8000/health"
 
 **With valid API Key:**
 ```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/data" -Method Get -Headers @{"x-api-key"="my-secret-key-123"}
+Invoke-RestMethod -Uri "http://localhost:8000/api/data" -Method Get -Headers @{"x-api-key"="my-secret-key"}
 ```
 ```bash
-curl -X GET "http://localhost:8000/api/data" -H "x-api-key: my-secret-key-123"
+curl -X GET "http://localhost:8000/api/data" -H "x-api-key: my-secret-key"
 ```
 
 **Without API Key or with invalid key (Returns 401 Unauthorized):**
@@ -95,10 +95,10 @@ curl -X GET "http://localhost:8000/api/data"
 
 **With valid API Key:**
 ```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/data" -Method Post -Headers @{"x-api-key"="my-secret-key-123"}
+Invoke-RestMethod -Uri "http://localhost:8000/api/data" -Method Post -Headers @{"x-api-key"="my-secret-key"}
 ```
 ```bash
-curl -X POST "http://localhost:8000/api/data" -H "x-api-key: my-secret-key-123"
+curl -X POST "http://localhost:8000/api/data" -H "x-api-key: my-secret-key"
 ```
 
 ---
