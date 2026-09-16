@@ -1,113 +1,41 @@
-# Security Exercise - Backend API (Part 1)
+# Security Backend API - Dynamic Secret Authentication, LDAP & Database Encryption
 
-API built with **Python** and **FastAPI** to demonstrate the security anti-pattern of static API key authentication passed via HTTP headers.
+FastAPI service integrated with **OpenLDAP**, dynamic **API_SECRET** rotation, and persistent **Fernet** database encryption.
 
-## 🚀 Prerequisites
+## 🚀 Key Features
 
-- Python 3.10+
-- Activated virtual environment
+1. **LDAP Authentication (`/api/login`)**: Validates user credentials against OpenLDAP directory (`osixia/openldap:1.5.0`) using `ldap3`.
+2. **Dynamic `API_SECRET` Authentication**: Validates `x-api-key` injected securely by the Nginx reverse proxy. The active secret is dynamically read from the shared volume (`/shared_secrets/current_secret.txt`).
+3. **Persistent Database Encryption**: Encrypts and decrypts confidential data in SQLite using Python's `cryptography.fernet` with `DATABASE_ENCRYPTION_KEY`. This key is persistent and NOT rotated during secret rotation.
+4. **Zero-Trust Reverse Proxy**: Browsers interact with Frontend Nginx; Frontend injects the secret server-side to Backend.
 
-## 📦 Dependency Installation
+## ⚙️ Environment Variables
 
-```bash
-pip install -r requirements.txt
-```
-
-## ⚙️ Configuration
-
-By default, the expected static API key is `my-secret-key`.
-You can change it by setting the `API_KEY` environment variable:
-
-```bash
-# On Windows (PowerShell)
-$env:API_KEY="your_custom_key"
-
-# On Linux/Mac
-export API_KEY="your_custom_key"
-```
-
-## ▶️ Running the Local Server
-
-Run the development server with auto-reload:
-
-```bash
-uvicorn main:app --reload --port 8000
-```
-
-The server will be available at `http://localhost:8000`.
-Interactive documentation is available at `http://localhost:8000/docs`.
-
----
+| Variable | Default | Description |
+|---|---|---|
+| `API_SECRET` | `initial_secret_abc123` | Shared secret for Nginx <-> Backend communication |
+| `DATABASE_ENCRYPTION_KEY` | *(Fernet 32-byte key)* | Persistent database encryption key (DO NOT ROTATE) |
+| `DB_PATH` | `/app/data/app.db` | SQLite database file path |
+| `LDAP_HOST` | `openldap` | OpenLDAP hostname or IP |
+| `LDAP_PORT` | `389` | OpenLDAP port |
+| `LDAP_BASE_DN` | `dc=example,dc=com` | LDAP Base DN |
+| `LDAP_ADMIN_PASSWORD` | `adminpassword` | OpenLDAP administrator password |
 
 ## 📌 Endpoints
 
-| Method | Endpoint | Requires API Key | Required Header | Expected Response |
-|---|---|---|---|---|
-| `GET` | `/health` | ❌ No | None | `{"status": "ok"}` |
-| `GET` | `/api/data` | ✅ Yes | `x-api-key: my-secret-key` | JSON with protected data |
-| `POST` | `/api/data` | ✅ Yes | `x-api-key: my-secret-key` | `{"message": "POST received"}` |
+| Method | Endpoint | Auth Required | Description |
+|---|---|---|---|
+| `GET` | `/health` | ❌ No | Health check |
+| `GET` | `/api/status` | ❌ No | Diagnostic status and masked secret verification |
+| `GET` | `/api/ldap/status` | ❌ No | OpenLDAP connection health |
+| `POST` | `/api/login` | ✅ `x-api-key` | Authenticates user against OpenLDAP (`alice`, `bob`) |
+| `GET` | `/api/data` | ✅ `x-api-key` | Retrieves latest record, decrypts with Fernet |
+| `POST` | `/api/data` | ✅ `x-api-key` | Encrypts payload with Fernet and stores in SQLite |
 
----
+## 🧪 Testing
 
-## 🧪 Testing the Endpoints
-
-### Automated Test Suite
-Run the test script directly:
+Run automated tests:
 ```bash
 python test_api.py
 ```
-
-### Manual Testing
-
-#### 1. Health Check (GET `/health`)
-**PowerShell:**
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/health" -Method Get
-```
-**cURL:**
-```bash
-curl -X GET "http://localhost:8000/health"
-```
-
----
-
-#### 2. Protected GET (GET `/api/data`)
-
-**With valid API Key:**
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/data" -Method Get -Headers @{"x-api-key"="my-secret-key"}
-```
-```bash
-curl -X GET "http://localhost:8000/api/data" -H "x-api-key: my-secret-key"
-```
-
-**Without API Key or with invalid key (Returns 401 Unauthorized):**
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/data" -Method Get
-```
-```bash
-curl -X GET "http://localhost:8000/api/data"
-```
-
----
-
-#### 3. Protected POST (POST `/api/data`)
-
-**With valid API Key:**
-```powershell
-Invoke-RestMethod -Uri "http://localhost:8000/api/data" -Method Post -Headers @{"x-api-key"="my-secret-key"}
-```
-```bash
-curl -X POST "http://localhost:8000/api/data" -H "x-api-key: my-secret-key"
-```
-
----
-
-## 🛡️ Security Anti-Pattern
-
-This exercise demonstrates the following validation flow:
-1. The client sends `x-api-key: SECRET` in the header.
-2. The server directly compares the value against a hardcoded/static key.
-3. If missing or mismatched -> `401 Unauthorized`.
-4. If matched -> Returns the protected data.
 
