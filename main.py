@@ -305,19 +305,19 @@ def login_ldap(request: LoginRequest):
                 "dn": user_dn,
                 "user_info": user_details,
                 "timestamp": datetime.utcnow().isoformat(),
-                "message": f"Usuario '{request.username}' autenticado exitosamente con OpenLDAP"
+                "message": f"User '{request.username}' authenticated successfully via OpenLDAP"
             }
 
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Credenciales LDAP inválidas: Usuario o contraseña incorrectos"
+            detail="Invalid LDAP credentials: Username or password incorrect"
         )
     except HTTPException:
         raise
     except Exception as err:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error en servidor LDAP ({LDAP_HOST}:{LDAP_PORT}): {str(err)}"
+            detail=f"LDAP server error ({LDAP_HOST}:{LDAP_PORT}): {str(err)}"
         )
     finally:
         try:
